@@ -31,7 +31,7 @@ const WINDOW_CONFIG = {
 export const createWindow = (logger: Logger): BrowserWindow => {
 	const browserWindow = new BrowserWindow({
 		...WINDOW_CONFIG,
-		icon: path.join(__dirname, "../../assets/icon.png"),
+		icon: MAIN_WINDOW_VITE_DEV_SERVER_URL ? path.join(__dirname, "../../assets/icon.png") : undefined,
 		show: false,
 		webPreferences: {
 			preload: path.join(__dirname, "preload.js"),
@@ -80,7 +80,7 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 			});
 		});
 	} else {
-		const filePath = path.join(__dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
+		const filePath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
 
 		browserWindow.loadFile(filePath).catch((error: unknown) => {
 			logger.error("Failed to load file", error as Error, { namespace: "window", filePath });
