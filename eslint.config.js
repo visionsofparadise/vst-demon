@@ -20,6 +20,7 @@ export default tseslint.config(
       "**/*.config.ts",
       "agent-eslint.js",
       "agent-tsc.js",
+      "scripts/**",
       "**/vite.config.*",
       "**/tailwind.config.*",
       "**/postcss.config.*",

@@ -14,7 +14,8 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "unit": "vitest run unit"
+    "unit": "vitest run unit",
+    "fetch-cli": "tsx scripts/fetch-cli.ts"
   },
   "author": {
     "name": "Matt Cavender",
@@ -31,9 +32,11 @@
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^9.0.0",
     "@stylistic/eslint-plugin": "^2.0.0",
+    "@types/adm-zip": "^0.5.8",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "adm-zip": "^0.5.18",
     "concurrently": "^9.2.1",
     "electron": "40.8.0",
     "eslint": "^9.0.0",
@@ -44,6 +47,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.0.0",
     "tailwindcss": "^4.2.1",
+    "tsx": "^4.23.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0",
     "vite": "^5.4.0",
