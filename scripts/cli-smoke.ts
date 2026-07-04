@@ -8,7 +8,7 @@ import { Logger } from "../src/shared/models/Logger";
 import type { ScanEntry } from "../src/shared/scan/ScanEntry";
 
 const repoRoot = path.resolve(fileURLToPath(import.meta.url), "..", "..");
-const cliPath = path.resolve(repoRoot, "binaries", "vst-demon.exe");
+const cliPath = path.resolve(repoRoot, "binaries", "vst-demon-cli.exe");
 
 const searchRoots: ReadonlyArray<string> = [
 	path.join("C:\\", "Program Files", "Common Files", "VST3"),

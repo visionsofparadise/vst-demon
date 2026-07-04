@@ -33,4 +33,4 @@ npm run unit        # vitest
 npm run make        # build the Windows installer into out/make/
 ```
 
-`fetch-cli` downloads the pinned CLI release into `binaries/` (gitignored) and is run automatically before `make` in CI. The built app bundles that binary as a sidecar (`resources/binaries/vst-demon.exe`).
+`fetch-cli` downloads the pinned CLI release into `binaries/` (gitignored) and is run automatically before `make` in CI. The built app bundles that binary as a sidecar (`resources/binaries/vst-demon-cli.exe`).

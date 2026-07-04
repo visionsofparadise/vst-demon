@@ -7,7 +7,7 @@ import type { ScanEntry } from "../src/shared/scan/ScanEntry";
 import { ScanService } from "../src/main/ScanService";
 
 const repoRoot = path.resolve(fileURLToPath(import.meta.url), "..", "..");
-const cliPath = path.resolve(repoRoot, "binaries", "vst-demon.exe");
+const cliPath = path.resolve(repoRoot, "binaries", "vst-demon-cli.exe");
 const cachePath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "vst-demon-smoke-")), "scan-cache.json");
 
 const vst3Roots: ReadonlyArray<string> = [

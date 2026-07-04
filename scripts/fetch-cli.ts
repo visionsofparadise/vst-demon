@@ -5,13 +5,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const CLI_URL =
-	"https://github.com/visionsofparadise/vst-demon-cli/releases/download/v0.1.1/vst-demon-win32-x64.zip";
-const CLI_SHA256 = "b30a98dc99dbb25ccd6b3288d3f9dd8d2b1f02ac1b9306fe9b4858aa1d0eae72";
-const CLI_ENTRY = "vst-demon.exe";
+	"https://github.com/visionsofparadise/vst-demon-cli/releases/download/v0.2.2/vst-demon-cli-win32-x64.zip";
+const CLI_SHA256 = "36c2cc3b95807a8d644e7e4372340339ef027060fc047ad722cd68aef8583d33";
+const CLI_ENTRY = "vst-demon-cli.exe";
 
 const REPO = "visionsofparadise/vst-demon-cli";
-const RELEASE_TAG = "v0.1.1";
-const ASSET_NAME = "vst-demon-win32-x64.zip";
+const RELEASE_TAG = "v0.2.2";
+const ASSET_NAME = "vst-demon-cli-win32-x64.zip";
 
 const repoRoot = path.resolve(fileURLToPath(import.meta.url), "..", "..");
 const binariesDir = path.join(repoRoot, "binaries");
