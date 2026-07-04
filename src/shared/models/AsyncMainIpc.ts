@@ -1,4 +1,5 @@
 import type { BrowserWindow } from "electron";
+import type { CliManager } from "../../main/CliManager";
 import type { ScanService } from "../../main/ScanService";
 import { Logger } from "./Logger";
 
@@ -7,6 +8,7 @@ export interface IpcHandlerDependencies {
 	readonly logger: Logger;
 	readonly windowId: string;
 	readonly scanService: ScanService;
+	readonly cliManager: CliManager;
 }
 
 export abstract class AsyncMainIpc<P extends Array<unknown>, R> {

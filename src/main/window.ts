@@ -3,6 +3,7 @@ import path from "path";
 import { ASYNC_MAIN_IPCS } from "../shared/ipc/asyncMainIpcs";
 import type { Logger } from "../shared/models/Logger";
 import type { ScanEntry } from "../shared/scan/ScanEntry";
+import { CliManager, type CliEventPayload } from "./CliManager";
 import { getCliPath } from "./cliPath";
 import { ScanService } from "./ScanService";
 
@@ -41,22 +42,34 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 
 	const windowId = crypto.randomUUID();
 
+	const cliPath = getCliPath();
+
 	const scanService = new ScanService({
 		vst3Roots: VST3_ROOTS,
 		cachePath: path.join(app.getPath("userData"), "scan-cache.json"),
-		cliPath: getCliPath(),
+		cliPath,
 		logger,
 		onUpdate: (entries: ReadonlyArray<ScanEntry>) => {
 			browserWindow.webContents.send("scan:update", entries);
 		},
 	});
 
+	const cliManager = new CliManager({
+		documentsDir: app.getPath("documents"),
+		cliPath,
+		logger,
+		onEvent: (payload: CliEventPayload) => {
+			browserWindow.webContents.send("cli:event", payload);
+		},
+	});
+
 	for (const AsyncMainIpc of ASYNC_MAIN_IPCS) {
-		new AsyncMainIpc().register({ browserWindow, logger, windowId, scanService });
+		new AsyncMainIpc().register({ browserWindow, logger, windowId, scanService, cliManager });
 	}
 
 	browserWindow.on("closed", () => {
 		scanService.dispose();
+		cliManager.dispose();
 	});
 
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
