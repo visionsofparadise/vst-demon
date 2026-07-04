@@ -65,12 +65,12 @@ export function SettingsDialog({ context, open, onOpenChange }: { readonly conte
 			open={open}
 			onOpenChange={onOpenChange}
 		>
-			<DialogContent className="max-w-xl">
-				<DialogHeader>
+			<DialogContent>
+				<DialogHeader className="text-left">
 					<DialogTitle>Scan folders</DialogTitle>
 					<DialogDescription>VST Demon scans these folders for installed VST3 plugins.</DialogDescription>
 				</DialogHeader>
-				<ul className="flex flex-col gap-1">
+				<ul className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
 					{scanRoots.length === 0 ? (
 						<li className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">No folders configured. Nothing will be scanned.</li>
 					) : (
