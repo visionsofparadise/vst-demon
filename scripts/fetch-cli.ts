@@ -3,19 +3,51 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-const CLI_URL =
-	"https://github.com/visionsofparadise/vst-demon-cli/releases/download/v0.2.2/vst-demon-cli-win32-x64.zip";
-const CLI_SHA256 = "36c2cc3b95807a8d644e7e4372340339ef027060fc047ad722cd68aef8583d33";
-const CLI_ENTRY = "vst-demon-cli.exe";
+import { extract } from "tar";
 
 const REPO = "visionsofparadise/vst-demon-cli";
 const RELEASE_TAG = "v0.2.2";
-const ASSET_NAME = "vst-demon-cli-win32-x64.zip";
+
+interface CliAsset {
+	readonly assetName: string;
+	readonly sha256: string;
+	readonly binaryName: string;
+	readonly archiveKind: "zip" | "tar.gz";
+}
+
+const CLI_ASSETS: Partial<Record<NodeJS.Platform, CliAsset>> = {
+	win32: {
+		assetName: "vst-demon-cli-win32-x64.zip",
+		sha256: "36c2cc3b95807a8d644e7e4372340339ef027060fc047ad722cd68aef8583d33",
+		binaryName: "vst-demon-cli.exe",
+		archiveKind: "zip",
+	},
+	linux: {
+		assetName: "vst-demon-cli-linux-x64.tar.gz",
+		sha256: "0e5ba5b8b4b21382af9afe4a8b9420937733fbb093e4f82058f8a1857d7eddf9",
+		binaryName: "vst-demon-cli",
+		archiveKind: "tar.gz",
+	},
+	darwin: {
+		assetName: "vst-demon-cli-darwin-arm64.tar.gz",
+		sha256: "0d12a909d04194e5be3769b94e97d008ae9a1e7d414cb834aab37da72391feb0",
+		binaryName: "vst-demon-cli",
+		archiveKind: "tar.gz",
+	},
+};
+
+const asset = CLI_ASSETS[process.platform];
+
+if (asset === undefined) {
+	console.error(`[fetch-cli] no vst-demon-cli asset for platform ${process.platform} — supported: ${Object.keys(CLI_ASSETS).join(", ")}`);
+	process.exit(1);
+}
+
+const assetUrl = `https://github.com/${REPO}/releases/download/${RELEASE_TAG}/${asset.assetName}`;
 
 const repoRoot = path.resolve(fileURLToPath(import.meta.url), "..", "..");
 const binariesDir = path.join(repoRoot, "binaries");
-const exePath = path.join(binariesDir, CLI_ENTRY);
+const binaryPath = path.join(binariesDir, asset.binaryName);
 
 const githubToken = (): string | undefined =>
 	process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? undefined;
@@ -48,18 +80,18 @@ const resolvePrivateAssetUrl = async (token: string): Promise<string> => {
 	}
 
 	const release = (await response.json()) as { assets?: ReadonlyArray<{ name: string; url: string }> };
-	const asset = release.assets?.find((candidate) => candidate.name === ASSET_NAME);
+	const releaseAsset = release.assets?.find((candidate) => candidate.name === asset.assetName);
 
-	if (asset === undefined) {
-		throw new Error(`Release ${RELEASE_TAG} of ${REPO} has no asset named ${ASSET_NAME}`);
+	if (releaseAsset === undefined) {
+		throw new Error(`Release ${RELEASE_TAG} of ${REPO} has no asset named ${asset.assetName}`);
 	}
 
-	return asset.url;
+	return releaseAsset.url;
 };
 
-const downloadZip = async (): Promise<Buffer> => {
+const downloadArchive = async (): Promise<Buffer> => {
 	const token = githubToken();
-	const directResponse = await fetch(CLI_URL, {
+	const directResponse = await fetch(assetUrl, {
 		headers: {
 			Accept: "application/octet-stream",
 			"User-Agent": "vst-demon-fetch-cli",
@@ -72,8 +104,8 @@ const downloadZip = async (): Promise<Buffer> => {
 	}
 
 	if (directResponse.status === 404 && token !== undefined) {
-		const assetUrl = await resolvePrivateAssetUrl(token);
-		const assetResponse = await fetch(assetUrl, {
+		const privateAssetUrl = await resolvePrivateAssetUrl(token);
+		const assetResponse = await fetch(privateAssetUrl, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 				Accept: "application/octet-stream",
@@ -84,7 +116,7 @@ const downloadZip = async (): Promise<Buffer> => {
 
 		if (!assetResponse.ok) {
 			throw new Error(
-				`Download failed for ${assetUrl}: HTTP ${assetResponse.status} ${assetResponse.statusText}`,
+				`Download failed for ${privateAssetUrl}: HTTP ${assetResponse.status} ${assetResponse.statusText}`,
 			);
 		}
 
@@ -97,38 +129,65 @@ const downloadZip = async (): Promise<Buffer> => {
 			: "";
 
 	throw new Error(
-		`Download failed for ${CLI_URL}: HTTP ${directResponse.status} ${directResponse.statusText}${hint}`,
+		`Download failed for ${assetUrl}: HTTP ${directResponse.status} ${directResponse.statusText}${hint}`,
 	);
 };
 
+const extractZip = async (archiveBuffer: Buffer): Promise<void> => {
+	const zip = new AdmZip(archiveBuffer);
+	const entry = zip.getEntry(asset.binaryName);
+
+	if (entry === null) {
+		throw new Error(`Zip ${asset.assetName} has no entry named ${asset.binaryName}`);
+	}
+
+	await fs.writeFile(binaryPath, entry.getData());
+};
+
+const extractTarGz = async (archiveBuffer: Buffer): Promise<void> => {
+	// tar v7 extracts from files/streams, not buffers
+	const archivePath = path.join(binariesDir, asset.assetName);
+
+	await fs.writeFile(archivePath, archiveBuffer);
+
+	try {
+		await extract({ file: archivePath, cwd: binariesDir });
+
+		if (!(await fileExists(binaryPath))) {
+			throw new Error(`Tarball ${asset.assetName} has no entry named ${asset.binaryName}`);
+		}
+
+		await fs.chmod(binaryPath, 0o755);
+	} finally {
+		await fs.rm(archivePath, { force: true });
+	}
+};
+
 const main = async (): Promise<void> => {
-	if (await fileExists(exePath)) {
-		console.warn(`[fetch-cli] ${CLI_ENTRY} present, skipping`);
+	if (await fileExists(binaryPath)) {
+		console.warn(`[fetch-cli] ${asset.binaryName} present, skipping`);
 
 		return;
 	}
 
 	await fs.mkdir(binariesDir, { recursive: true });
 
-	console.warn(`[fetch-cli] downloading ${ASSET_NAME} <- ${CLI_URL}`);
+	console.warn(`[fetch-cli] downloading ${asset.assetName} <- ${assetUrl}`);
 
-	const zipBuffer = await downloadZip();
-	const actualSha256 = createHash("sha256").update(zipBuffer).digest("hex");
+	const archiveBuffer = await downloadArchive();
+	const actualSha256 = createHash("sha256").update(archiveBuffer).digest("hex");
 
-	if (actualSha256 !== CLI_SHA256) {
-		throw new Error(`sha256 mismatch for ${ASSET_NAME} — expected ${CLI_SHA256}, got ${actualSha256}`);
+	if (actualSha256 !== asset.sha256) {
+		throw new Error(`sha256 mismatch for ${asset.assetName} — expected ${asset.sha256}, got ${actualSha256}`);
 	}
 
-	const zip = new AdmZip(zipBuffer);
-	const entry = zip.getEntry(CLI_ENTRY);
-
-	if (entry === null) {
-		throw new Error(`Zip ${ASSET_NAME} has no entry named ${CLI_ENTRY}`);
+	if (asset.archiveKind === "zip") {
+		await extractZip(archiveBuffer);
+	} else {
+		await extractTarGz(archiveBuffer);
 	}
 
-	await fs.writeFile(exePath, entry.getData());
-
-	console.warn(`[fetch-cli] extracted ${CLI_ENTRY} -> ${exePath}`);
+	console.warn(`[fetch-cli] extracted ${asset.binaryName} -> ${binaryPath}`);
 };
 
 main().catch((error: unknown) => {

@@ -15,7 +15,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "unit": "vitest run unit",
-    "fetch-cli": "tsx scripts/fetch-cli.ts"
+    "fetch-cli": "tsx scripts/fetch-cli.ts",
+    "gen-icons": "tsx scripts/gen-icons.ts"
   },
   "author": {
     "name": "Matt Cavender",
@@ -24,6 +25,8 @@
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-deb": "^7.11.2",
+    "@electron-forge/maker-rpm": "^7.11.2",
     "@electron-forge/maker-squirrel": "^7.11.1",
     "@electron-forge/maker-zip": "^7.11.1",
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
@@ -47,8 +50,10 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.0.0",
     "png-to-ico": "^3.0.1",
+    "png2icons": "^2.0.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.2.1",
+    "tar": "^7.5.19",
     "tsx": "^4.23.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0",

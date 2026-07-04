@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CliManager, type CliEventPayload } from "../src/main/CliManager";
+import { createLaunchCli, type CliEventPayload } from "../src/main/launchCli";
 import { Logger } from "../src/shared/models/Logger";
 import type { ScanEntry } from "../src/shared/scan/ScanEntry";
 
@@ -66,7 +66,7 @@ const main = async (): Promise<void> => {
 
 	const events: Array<CliEventPayload> = [];
 
-	const manager = new CliManager({
+	const launchCli = createLaunchCli({
 		documentsDir,
 		cliPath,
 		logger,
@@ -76,41 +76,37 @@ const main = async (): Promise<void> => {
 		},
 	});
 
-	const spawnId = manager.launch({
+	const entry: ScanEntry = {
 		entryKey: modulePath,
 		name: "OTT",
 		modulePath,
+		rootPath: searchRoots[0] ?? "",
 		vendorFolder: "",
 		status: "ready",
-	});
+	};
+
+	const spawnId = launchCli(entry);
 
 	console.warn(`spawnId: ${spawnId}`);
-
-	const child = manager["children"].get(spawnId)?.child;
-	const pid = child?.pid;
-
-	console.warn(`pid: ${pid ?? "unknown"}`);
 
 	await delay(8000);
 
 	const presetExists = fs.existsSync(presetPath);
 
 	console.warn(`\npreset appeared after 8s: ${presetExists}`);
-	console.warn(`event sequence: ${events.map((entry) => entry.event.event).join(", ")}`);
+	console.warn(`event sequence: ${events.map((payload) => payload.event.event).join(", ")}`);
 
-	if (pid !== undefined) {
-		try {
-			execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" });
-			console.warn(`killed pid ${pid}`);
-		} catch (error) {
-			console.warn(`taskkill failed: ${String(error)}`);
-		}
+	try {
+		execSync("taskkill /IM vst-demon-cli.exe /T /F", { stdio: "ignore" });
+		console.warn("killed vst-demon-cli.exe");
+	} catch (error) {
+		console.warn(`taskkill failed: ${String(error)}`);
 	}
 
 	await delay(1500);
 
-	console.warn(`\nfinal event sequence: ${events.map((entry) => entry.event.event).join(", ")}`);
-	const exited = events.find((entry) => entry.event.event === "exited");
+	console.warn(`\nfinal event sequence: ${events.map((payload) => payload.event.event).join(", ")}`);
+	const exited = events.find((payload) => payload.event.event === "exited");
 
 	console.warn(`synthetic exited event: ${exited === undefined ? "NONE" : JSON.stringify(exited.event)}`);
 

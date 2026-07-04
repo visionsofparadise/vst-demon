@@ -5,15 +5,14 @@ import { fileURLToPath } from "node:url";
 import { Logger } from "../src/shared/models/Logger";
 import type { ScanEntry } from "../src/shared/scan/ScanEntry";
 import { ScanService } from "../src/main/ScanService";
+import { defaultScanRoots } from "../src/main/settings";
 
 const repoRoot = path.resolve(fileURLToPath(import.meta.url), "..", "..");
-const cliPath = path.resolve(repoRoot, "binaries", "vst-demon-cli.exe");
+const cliBinary = process.platform === "win32" ? "vst-demon-cli.exe" : "vst-demon-cli";
+const cliPath = path.resolve(repoRoot, "binaries", cliBinary);
 const cachePath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "vst-demon-smoke-")), "scan-cache.json");
 
-const vst3Roots: ReadonlyArray<string> = [
-	path.join("C:\\", "Program Files", "Common Files", "VST3"),
-	...(process.env.LOCALAPPDATA === undefined ? [] : [path.join(process.env.LOCALAPPDATA, "Programs", "Common", "VST3")]),
-];
+const vst3Roots: ReadonlyArray<string> = defaultScanRoots();
 
 Logger.level = "warn";
 const logger = new Logger("main");
@@ -42,7 +41,7 @@ const main = async (): Promise<void> => {
 	console.warn(`roots: ${vst3Roots.join(" | ")}`);
 
 	const service = new ScanService({
-		vst3Roots,
+		getRoots: () => vst3Roots,
 		cachePath,
 		cliPath,
 		logger,
@@ -67,6 +66,8 @@ const main = async (): Promise<void> => {
 	console.warn(`\n=== WARM RESCAN (${warmMs} ms, ${warm.length} entries, ${updateCount} update events) ===`);
 
 	console.warn(`\ncold=${coldMs} ms  warm=${warmMs} ms  cache=${cachePath}`);
+
+	process.exit(0);
 };
 
 main().catch((error: unknown) => {

@@ -10,13 +10,31 @@ It scans your system's VST3 folders and lists every plugin it finds; click one t
 
 ## Installation
 
+### Windows
+
 Download `VST Demon-<version> Setup.exe` from the [releases](https://github.com/visionsofparadise/vst-demon/releases) and run it.
+
+### Linux
+
+Download the `.deb` (Debian/Ubuntu) or `.rpm` (Fedora/openSUSE) asset from the [releases](https://github.com/visionsofparadise/vst-demon/releases) and install it with your package manager.
+
+Install `zenity` or `kdialog` for the plugin window's Open/Save file dialogs (the deb recommends them; scanning, launching, and continuous saving work without). The plugin window has no menu bar on Linux — use the keyboard shortcuts **Ctrl+O** (Open Preset…), **Ctrl+Shift+S** (Save Preset As…), and **Ctrl+W** (close).
+
+Default scan roots: `~/.vst3`, `/usr/lib/vst3`, `/usr/local/lib/vst3`.
+
+### macOS (experimental)
+
+arm64 only, built in CI, unverified on hardware — reports welcome. Download the darwin zip from the [releases](https://github.com/visionsofparadise/vst-demon/releases) and move `vst-demon.app` to `/Applications`.
+
+The app is unsigned and un-notarized, so Gatekeeper blocks the first launch: right-click the app and choose **Open**, or run `xattr -dr com.apple.quarantine "/Applications/vst-demon.app"`. The recursive `-r` matters — the quarantine flag also lands on the bundled CLI binary inside the app.
+
+Default scan roots: `/Library/Audio/Plug-Ins/VST3`, `~/Library/Audio/Plug-Ins/VST3`.
 
 ## Usage
 
 Launch VST Demon; it scans your VST3 folders and shows the plugin list. Type to filter by name. Click a plugin to open its editor; a dot marks it as running until you close its window. Use the rescan button to pick up newly installed plugins.
 
-Presets are written to `Documents\VST Demon\`, one file per plugin (shell sub-plugins use the sub-plugin name). To control where a preset writes, use the plugin window's **File** menu: **Open Preset…** loads a file and re-points continuous saving at it; **Save Preset As…** writes to a new path and continues saving there.
+Presets are written to `Documents/VST Demon/`, one file per plugin (shell sub-plugins use the sub-plugin name). To control where a preset writes, use the plugin window's **File** menu: **Open Preset…** loads a file and re-points continuous saving at it; **Save Preset As…** writes to a new path and continues saving there.
 
 ### Known Limitations
 
@@ -30,7 +48,7 @@ npm run fetch-cli   # download the pinned vst-demon-cli binary into binaries/
 npm run start       # run the app in dev
 npm run check       # eslint + tsc
 npm run unit        # vitest
-npm run make        # build the Windows installer into out/make/
+npm run make        # build this platform's packages into out/make/
 ```
 
-`fetch-cli` downloads the pinned CLI release into `binaries/` (gitignored) and is run automatically before `make` in CI. The built app bundles that binary as a sidecar (`resources/binaries/vst-demon-cli.exe`).
+`fetch-cli` downloads the pinned CLI release for the current platform into `binaries/` (gitignored) and is run automatically before `make` in CI. The built app bundles that binary as a sidecar (`resources/binaries/vst-demon-cli.exe`, no `.exe` off-Windows).
