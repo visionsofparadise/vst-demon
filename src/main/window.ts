@@ -3,22 +3,18 @@ import path from "path";
 import { ASYNC_MAIN_IPCS } from "../shared/ipc/asyncMainIpcs";
 import type { Logger } from "../shared/models/Logger";
 import type { ScanEntry } from "../shared/scan/ScanEntry";
-import { CliManager, type CliEventPayload } from "./CliManager";
+import { createLaunchCli, type CliEventPayload } from "./launchCli";
 import { getCliPath } from "./cliPath";
 import { ScanService } from "./ScanService";
-
-const VST3_ROOTS: ReadonlyArray<string> = [
-	path.join("C:\\", "Program Files", "Common Files", "VST3"),
-	...(process.env.LOCALAPPDATA === undefined ? [] : [path.join(process.env.LOCALAPPDATA, "Programs", "Common", "VST3")]),
-];
+import { ensureSettings, readSettings } from "./settings";
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
 const WINDOW_CONFIG = {
-	width: 1200,
-	height: 800,
-	minWidth: 600,
+	width: 400,
+	height: 711,
+	minWidth: 300,
 	minHeight: 400,
 	titleBarStyle: "hidden" as const,
 	titleBarOverlay: {
@@ -44,8 +40,12 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 
 	const cliPath = getCliPath();
 
+	const settingsPath = path.join(app.getPath("userData"), "settings.json");
+
+	ensureSettings(settingsPath, logger);
+
 	const scanService = new ScanService({
-		vst3Roots: VST3_ROOTS,
+		getRoots: () => readSettings(settingsPath, logger).scanRoots,
 		cachePath: path.join(app.getPath("userData"), "scan-cache.json"),
 		cliPath,
 		logger,
@@ -54,7 +54,7 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 		},
 	});
 
-	const cliManager = new CliManager({
+	const launchCli = createLaunchCli({
 		documentsDir: app.getPath("documents"),
 		cliPath,
 		logger,
@@ -64,12 +64,13 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 	});
 
 	for (const AsyncMainIpc of ASYNC_MAIN_IPCS) {
-		new AsyncMainIpc().register({ browserWindow, logger, windowId, scanService, cliManager });
+		new AsyncMainIpc().register({ browserWindow, logger, windowId, scanService, launchCli, userDataDir: app.getPath("userData") });
 	}
+
+	scanService.startWatching();
 
 	browserWindow.on("closed", () => {
 		scanService.dispose();
-		cliManager.dispose();
 	});
 
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

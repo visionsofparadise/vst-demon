@@ -1,4 +1,4 @@
-import type { CliEventPayload } from "../../main/CliManager";
+import type { CliEventPayload } from "../../main/launchCli";
 import type { ScanEntry } from "../scan/ScanEntry";
 
 export interface MainEventMap {

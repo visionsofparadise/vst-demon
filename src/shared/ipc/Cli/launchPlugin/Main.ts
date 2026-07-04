@@ -7,6 +7,6 @@ export class LaunchPluginMainIpc extends AsyncMainIpc<LaunchPluginIpcParameters,
 	handler(...parameters: [...LaunchPluginIpcParameters, IpcHandlerDependencies]): LaunchPluginIpcReturn {
 		const [entry, dependencies] = parameters;
 
-		return dependencies.cliManager.launch(entry);
+		return dependencies.launchCli(entry);
 	}
 }

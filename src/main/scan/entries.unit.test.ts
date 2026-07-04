@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { deriveErrorEntry, derivePendingEntry, deriveReadyEntries } from "./entries";
 import type { WalkModule } from "./walk";
 
-const module: WalkModule = { modulePath: "C:\\VST3\\WaveShell.vst3", vendorFolder: "Waves", name: "WaveShell" };
+const module: WalkModule = { modulePath: "C:\\VST3\\WaveShell.vst3", rootPath: "C:\\VST3", vendorFolder: "Waves", name: "WaveShell" };
 
 describe("deriveReadyEntries", () => {
 	it("keeps a single entry with the module display name (no className) for a single-class module", () => {
@@ -13,6 +13,7 @@ describe("deriveReadyEntries", () => {
 				entryKey: "C:\\VST3\\WaveShell.vst3",
 				name: "WaveShell",
 				modulePath: module.modulePath,
+				rootPath: "C:\\VST3",
 				vendorFolder: "Waves",
 				status: "ready",
 			},
@@ -27,6 +28,7 @@ describe("deriveReadyEntries", () => {
 				entryKey: "C:\\VST3\\WaveShell.vst3::REQ 2 Mono",
 				name: "REQ 2 Mono",
 				modulePath: module.modulePath,
+				rootPath: "C:\\VST3",
 				vendorFolder: "Waves",
 				className: "REQ 2 Mono",
 				status: "ready",
@@ -35,6 +37,7 @@ describe("deriveReadyEntries", () => {
 				entryKey: "C:\\VST3\\WaveShell.vst3::REQ 2 Stereo",
 				name: "REQ 2 Stereo",
 				modulePath: module.modulePath,
+				rootPath: "C:\\VST3",
 				vendorFolder: "Waves",
 				className: "REQ 2 Stereo",
 				status: "ready",

@@ -4,6 +4,7 @@ export interface ScanEntry {
 	readonly entryKey: string;
 	readonly name: string;
 	readonly modulePath: string;
+	readonly rootPath: string;
 	readonly vendorFolder: string;
 	readonly className?: string;
 	readonly status: ScanEntryStatus;

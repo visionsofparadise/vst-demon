@@ -1,17 +1,24 @@
+import { ChevronDown } from "lucide-react";
+import type { ScanEntry } from "../../shared/scan/ScanEntry";
 import type { AppContext } from "../models/Context";
 import { filterEntries } from "../utilities/filterEntries";
 import { PluginRow } from "./PluginRow";
 
 const SKELETON_ROWS = Array.from({ length: 8 }, (_, index) => index);
 
-const EMPTY_MESSAGE =
-	"No VST3 plugins found in C:\\Program Files\\Common Files\\VST3 or %LOCALAPPDATA%\\Programs\\Common\\VST3";
+const EMPTY_MESSAGE = "No VST3 plugins found in the configured folders.";
 
 function SkeletonList() {
 	return (
-		<ul aria-hidden="true" className="flex flex-col gap-1 p-2">
+		<ul
+			aria-hidden="true"
+			className="flex flex-col gap-1 p-2"
+		>
 			{SKELETON_ROWS.map((index) => (
-				<li key={index} className="flex items-center gap-3 px-3 py-2">
+				<li
+					key={index}
+					className="flex items-center gap-3 px-3 py-2"
+				>
 					<span className="flex min-w-0 flex-1 flex-col gap-1.5">
 						<span className="h-3.5 w-1/3 rounded bg-[#1b1b1f]" />
 						<span className="h-2.5 w-1/5 rounded bg-[#161619]" />
@@ -38,6 +45,45 @@ function EmptyState({ context }: { readonly context: AppContext }) {
 	);
 }
 
+const groupByRoot = (entries: ReadonlyArray<ScanEntry>): ReadonlyMap<string, ReadonlyArray<ScanEntry>> => {
+	const groups = new Map<string, Array<ScanEntry>>();
+
+	for (const entry of entries) {
+		const group = groups.get(entry.rootPath);
+
+		if (group === undefined) {
+			groups.set(entry.rootPath, [entry]);
+		} else {
+			group.push(entry);
+		}
+	}
+
+	return groups;
+};
+
+function RootGroup({ rootPath, entries, context }: { readonly rootPath: string; readonly entries: ReadonlyArray<ScanEntry>; readonly context: AppContext }) {
+	return (
+		<details open className="group">
+			<summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-3 py-2 hover:bg-[#161619] [&::-webkit-details-marker]:hidden">
+				<ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-[#6a6a72] transition-transform group-open:rotate-0 -rotate-90" />
+				<span className="min-w-0 flex-1 truncate text-xs text-[#6a6a72]">{rootPath}</span>
+				<span className="shrink-0 text-xs text-[#6a6a72]">{entries.length}</span>
+			</summary>
+
+			<ul className="flex flex-col gap-1 pt-1">
+				{entries.map((entry) => (
+					<li key={entry.entryKey}>
+						<PluginRow
+							entry={entry}
+							context={context}
+						/>
+					</li>
+				))}
+			</ul>
+		</details>
+	);
+}
+
 export function PluginList({ context }: { readonly context: AppContext }) {
 	const { entries, scanning, query } = context;
 
@@ -55,13 +101,18 @@ export function PluginList({ context }: { readonly context: AppContext }) {
 		);
 	}
 
+	const groups = groupByRoot(filtered);
+
 	return (
-		<ul className="flex flex-col gap-1 overflow-y-auto p-2">
-			{filtered.map((entry) => (
-				<li key={entry.entryKey}>
-					<PluginRow entry={entry} context={context} />
-				</li>
+		<div className="flex flex-col gap-1 overflow-y-auto p-2">
+			{[...groups].map(([rootPath, groupEntries]) => (
+				<RootGroup
+					key={rootPath}
+					rootPath={rootPath}
+					entries={groupEntries}
+					context={context}
+				/>
 			))}
-		</ul>
+		</div>
 	);
 }

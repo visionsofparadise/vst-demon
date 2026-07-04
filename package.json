@@ -56,7 +56,9 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.18",
     "@tailwindcss/postcss": "^4.2.1",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron-squirrel-startup": "^1.0.1",
     "lucide-react": "^0.577.0",

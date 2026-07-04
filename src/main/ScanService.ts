@@ -4,11 +4,12 @@ import { isCacheHit, readCache, statModule, writeCache, type CacheRecord, type S
 import { deriveErrorEntry, derivePendingEntry, deriveReadyEntries } from "./scan/entries";
 import { listModule } from "./scan/listing";
 import { walkVst3Roots, type WalkModule } from "./scan/walk";
+import { createRootWatchers } from "./scan/watch";
 
 const LIST_POOL_CONCURRENCY = 3;
 
 export interface ScanServiceOptions {
-	readonly vst3Roots: ReadonlyArray<string>;
+	readonly getRoots: () => ReadonlyArray<string>;
 	readonly cachePath: string;
 	readonly cliPath: string;
 	readonly logger: Logger;
@@ -21,16 +22,58 @@ const recordToEntries = (module: WalkModule, record: CacheRecord): ReadonlyArray
 export class ScanService {
 	private readonly options: ScanServiceOptions;
 	private inFlight: Promise<ReadonlyArray<ScanEntry>> | undefined;
+	private rescanQueued = false;
+	private closeWatchers: (() => void) | undefined;
+	private watchedKey = "";
 
 	constructor(options: ScanServiceOptions) {
 		this.options = options;
 	}
 
+	startWatching(): void {
+		this.syncWatchers();
+	}
+
+	private syncWatchers(): void {
+		const roots = this.options.getRoots();
+		const key = JSON.stringify([...roots].sort());
+
+		if (key === this.watchedKey) return;
+
+		this.watchedKey = key;
+
+		this.closeWatchers?.();
+
+		this.closeWatchers = createRootWatchers(
+			roots,
+			() => {
+				this.scan().catch((error: unknown) => {
+					this.options.logger.error("Watch-triggered scan failed", error as Error, { namespace: "scan" });
+				});
+			},
+			this.options.logger,
+		);
+	}
+
 	async scan(): Promise<ReadonlyArray<ScanEntry>> {
-		if (this.inFlight !== undefined) return this.inFlight;
+		this.syncWatchers();
+
+		if (this.inFlight !== undefined) {
+			this.rescanQueued = true;
+
+			return this.inFlight;
+		}
 
 		this.inFlight = this.runScan().finally(() => {
 			this.inFlight = undefined;
+
+			if (this.rescanQueued) {
+				this.rescanQueued = false;
+
+				this.scan().catch((error: unknown) => {
+					this.options.logger.error("Queued rescan failed", error as Error, { namespace: "scan" });
+				});
+			}
 		});
 
 		return this.inFlight;
@@ -38,11 +81,14 @@ export class ScanService {
 
 	dispose(): void {
 		this.inFlight = undefined;
+
+		this.closeWatchers?.();
+		this.closeWatchers = undefined;
 	}
 
 	private async runScan(): Promise<ReadonlyArray<ScanEntry>> {
 		const { logger, cachePath, cliPath, onUpdate } = this.options;
-		const modules = walkVst3Roots(this.options.vst3Roots, logger);
+		const modules = walkVst3Roots(this.options.getRoots(), logger);
 		const cache = readCache(cachePath, logger);
 
 		const entriesByModule = new Map<string, ReadonlyArray<ScanEntry>>();

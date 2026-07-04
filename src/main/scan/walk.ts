@@ -4,6 +4,7 @@ import type { Logger } from "../../shared/models/Logger";
 
 export interface WalkModule {
 	readonly modulePath: string;
+	readonly rootPath: string;
 	readonly vendorFolder: string;
 	readonly name: string;
 }
@@ -39,7 +40,7 @@ export const walkRoot = (root: string, readDirectory: ReadDirectory, onWarn?: (d
 			if (isModuleDirent(entry)) {
 				const resolvedVendor = vendorFolder === "" ? entry.name : vendorFolder;
 
-				modules.push({ modulePath: entryPath, vendorFolder: resolvedVendor, name: moduleNameFromPath(entryPath) });
+				modules.push({ modulePath: entryPath, rootPath: root, vendorFolder: resolvedVendor, name: moduleNameFromPath(entryPath) });
 
 				continue;
 			}

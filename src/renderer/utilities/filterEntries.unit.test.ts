@@ -6,6 +6,7 @@ const entry = (name: string): ScanEntry => ({
 	entryKey: name,
 	name,
 	modulePath: `C:\\VST3\\${name}.vst3`,
+	rootPath: "C:\\VST3",
 	vendorFolder: "Vendor",
 	status: "ready",
 });

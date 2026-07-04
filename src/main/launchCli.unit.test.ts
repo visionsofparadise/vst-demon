@@ -1,7 +1,7 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ScanEntry } from "../shared/scan/ScanEntry";
-import { buildLaunchArgs, presetPathForEntry } from "./CliManager";
+import { buildLaunchArgs, presetPathForEntry } from "./launchCli";
 
 const DOCUMENTS_DIR = path.join("C:\\", "Users", "mttcv", "Documents");
 
@@ -9,6 +9,7 @@ const plainEntry: ScanEntry = {
 	entryKey: "C:\\Program Files\\Common Files\\VST3\\OTT.vst3",
 	name: "OTT",
 	modulePath: "C:\\Program Files\\Common Files\\VST3\\OTT.vst3",
+	rootPath: "C:\\Program Files\\Common Files\\VST3",
 	vendorFolder: "Xfer Records",
 	status: "ready",
 };
@@ -17,6 +18,7 @@ const shellEntry: ScanEntry = {
 	entryKey: "C:\\Program Files\\Common Files\\VST3\\WaveShell.vst3::REQ 2 Stereo",
 	name: "REQ 2 Stereo",
 	modulePath: "C:\\Program Files\\Common Files\\VST3\\WaveShell.vst3",
+	rootPath: "C:\\Program Files\\Common Files\\VST3",
 	vendorFolder: "Waves",
 	className: "REQ 2 Stereo",
 	status: "ready",

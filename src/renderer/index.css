@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #0D0D0F;
+  --color-foreground: #B8B8C0;
+  --color-bright: #E4E4EA;
+  --color-border: #26262b;
+  --color-input: #26262b;
+  --color-muted: #161619;
+  --color-muted-foreground: #6a6a72;
+  --color-accent: #1b1b1f;
+  --color-accent-foreground: #E4E4EA;
+  --color-popover: #161619;
+  --color-popover-foreground: #B8B8C0;
+  --color-ring: #4a4a52;
+}
+
 @layer base {
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
   *::-webkit-scrollbar { width: 6px; height: 6px; }
   *::-webkit-scrollbar-track { background: #26262b; }
   *::-webkit-scrollbar-thumb { background: #4a4a52; }
