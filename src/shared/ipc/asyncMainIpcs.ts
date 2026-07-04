@@ -1,3 +1,3 @@
-import type { AsyncMainIpc } from "../models/AsyncMainIpc";
+import { StartScanMainIpc } from "./Scan/startScan/Main";
 
-export const ASYNC_MAIN_IPCS: ReadonlyArray<new () => AsyncMainIpc<Array<unknown>, unknown>> = [];
+export const ASYNC_MAIN_IPCS = [StartScanMainIpc];

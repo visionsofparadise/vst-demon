@@ -1,6 +1,7 @@
-import type { AsyncRendererIpc, IpcHandlerAction, IpcHandlerParameters, IpcHandlerReturn } from "../models/AsyncRendererIpc";
+import type { IpcHandlerAction, IpcHandlerParameters, IpcHandlerReturn } from "../models/AsyncRendererIpc";
+import { StartScanRendererIpc } from "./Scan/startScan/Renderer";
 
-export const ASYNC_RENDERER_IPCS: ReadonlyArray<new () => AsyncRendererIpc<string, Array<unknown>, unknown>> = [];
+export const ASYNC_RENDERER_IPCS = [StartScanRendererIpc];
 
 export type AsyncIpcAction = IpcHandlerAction<InstanceType<(typeof ASYNC_RENDERER_IPCS)[number]>>;
 export type AsyncIpcParameters<A extends AsyncIpcAction> = IpcHandlerParameters<Extract<InstanceType<(typeof ASYNC_RENDERER_IPCS)[number]>, { action: A }>>;

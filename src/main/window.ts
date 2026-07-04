@@ -1,7 +1,15 @@
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 import path from "path";
 import { ASYNC_MAIN_IPCS } from "../shared/ipc/asyncMainIpcs";
 import type { Logger } from "../shared/models/Logger";
+import type { ScanEntry } from "../shared/scan/ScanEntry";
+import { getCliPath } from "./cliPath";
+import { ScanService } from "./ScanService";
+
+const VST3_ROOTS: ReadonlyArray<string> = [
+	path.join("C:\\", "Program Files", "Common Files", "VST3"),
+	...(process.env.LOCALAPPDATA === undefined ? [] : [path.join(process.env.LOCALAPPDATA, "Programs", "Common", "VST3")]),
+];
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -33,9 +41,23 @@ export const createWindow = (logger: Logger): BrowserWindow => {
 
 	const windowId = crypto.randomUUID();
 
+	const scanService = new ScanService({
+		vst3Roots: VST3_ROOTS,
+		cachePath: path.join(app.getPath("userData"), "scan-cache.json"),
+		cliPath: getCliPath(),
+		logger,
+		onUpdate: (entries: ReadonlyArray<ScanEntry>) => {
+			browserWindow.webContents.send("scan:update", entries);
+		},
+	});
+
 	for (const AsyncMainIpc of ASYNC_MAIN_IPCS) {
-		new AsyncMainIpc().register({ browserWindow, logger, windowId });
+		new AsyncMainIpc().register({ browserWindow, logger, windowId, scanService });
 	}
+
+	browserWindow.on("closed", () => {
+		scanService.dispose();
+	});
 
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 		browserWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL).catch((error: unknown) => {
