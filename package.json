@@ -1,7 +1,7 @@
 {
   "name": "vst-demon",
   "productName": "VST Demon",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "VST Demon — .vstpreset manager launcher for VST3 plugins",
   "main": ".vite/build/main.js",
   "private": true,
