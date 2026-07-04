@@ -7,6 +7,11 @@ on:
     paths:
       - package.json
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish a GitHub Release (otherwise a dry run of all three legs)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -40,7 +45,19 @@ jobs:
   build:
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+          - os: macos-latest
+            platform: darwin
+          - os: ubuntu-latest
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -61,19 +78,21 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
+          name: vst-demon-${{ matrix.platform }}
           path: out/make/**/*
           if-no-files-found: error
 
   release:
     needs: [check-version, build]
-    if: needs.check-version.outputs.changed == 'true'
+    if: >-
+      needs.check-version.outputs.changed == 'true' &&
+      (github.event_name == 'push' || github.event.inputs.publish == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: windows-installer
           path: artifacts
+          merge-multiple: true
 
       - run: find artifacts -type f
 
@@ -85,3 +104,6 @@ jobs:
             artifacts/**/*.exe
             artifacts/**/*.nupkg
             artifacts/**/RELEASES
+            artifacts/**/*.zip
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
