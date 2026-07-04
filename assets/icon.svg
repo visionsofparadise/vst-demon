@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">VST Demon icon</title>
+  <desc id="desc">A stylized horned demon head mark in light accent on the app's dark base.</desc>
+  <defs>
+    <clipPath id="round">
+      <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect x="0" y="0" width="1024" height="1024" fill="#0D0D0F"/>
+    <g fill="#B8B8C0">
+      <path d="M512 262
+               C 398 262 306 354 306 468
+               L 306 560
+               C 306 686 398 786 512 786
+               C 626 786 718 686 718 560
+               L 718 468
+               C 718 354 626 262 512 262 Z"/>
+      <path d="M306 476
+               C 236 452 190 386 182 300
+               C 250 342 296 402 322 476 Z"/>
+      <path d="M718 476
+               C 788 452 834 386 842 300
+               C 774 342 728 402 702 476 Z"/>
+    </g>
+    <g fill="#0D0D0F">
+      <path d="M400 512
+               L 470 476
+               L 470 556
+               Z"/>
+      <path d="M624 512
+               L 554 476
+               L 554 556
+               Z"/>
+      <path d="M456 660
+               C 456 660 484 700 512 700
+               C 540 700 568 660 568 660
+               C 552 684 534 700 512 700
+               C 490 700 472 684 456 660 Z"/>
+    </g>
+  </g>
+</svg>
